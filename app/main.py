@@ -4,8 +4,10 @@ from sqlalchemy import text
 from prometheus_fastapi_instrumentator import Instrumentator
 import models
 from auth import schemas
-from database import engine, get_db
+from database import engine, get_db, Base
 from auth.security import hash_password, verify_password, create_access_token
+
+Base.metadata.create_all(bind=engine)
 
 models.Base.metadata.create_all(bind=engine)
 
