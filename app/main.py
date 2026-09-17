@@ -11,8 +11,10 @@ Base.metadata.create_all(bind=engine)
 
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI(title="DGFiP SSO — API d'authentification")
 Instrumentator().instrument(app).expose(app)
+
+app.include_router(auth_router)
 
 @app.get("/health")
 def health_check(db: Session = Depends(get_db)):
