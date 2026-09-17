@@ -1,17 +1,17 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+from prometheus_fastapi_instrumentator import Instrumentator
 import models
 from database import engine, get_db
 
-# Crée les tables si elles n'existent pas encore
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+Instrumentator().instrument(app).expose(app)
 
 @app.get("/health")
 def health_check(db: Session = Depends(get_db)):
-    # Vérifie que la connexion à MySQL fonctionne
     db.execute(text("SELECT 1"))
     return {"status": "ok", "database": "connected"}
 
