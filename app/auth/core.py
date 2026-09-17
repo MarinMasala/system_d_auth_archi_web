@@ -144,4 +144,8 @@ def require_role(role: str):
         if current_user.role != role:
             raise HTTPException(status_code=403, detail="Accès refusé")
         return current_user
+<<<<<<< HEAD
     return checker
+=======
+    return checker
+>>>>>>> origin/main

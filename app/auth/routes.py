@@ -139,4 +139,8 @@ def read_current_user(current_user: User = Depends(get_current_user)):
 #
 # @router.post("/reset-password/{token}")
 # def reset_password(...): ...
+<<<<<<< HEAD
 # ---------------------------------------------------------------------------
+=======
+# ---------------------------------------------------------------------------
+>>>>>>> origin/main

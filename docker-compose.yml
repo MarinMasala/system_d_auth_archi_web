@@ -1,19 +1,34 @@
+<<<<<<< HEAD
+=======
+version: '3.8'
+
+>>>>>>> origin/main
 services:
   frontend:
     image: node:20
     working_dir: /app
     volumes:
       - ./frontend:/app
+<<<<<<< HEAD
     command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
     ports:
       - "3001:5173"
     depends_on:
       - auth-service
 
+=======
+    command: sh -c "npm install && npm start"
+    ports:
+      - "3001:3000"
+    depends_on:
+      - auth-service
+  
+>>>>>>> origin/main
   auth-service:
     image: python:3.12
     working_dir: /app
     volumes:
+<<<<<<< HEAD
       - ./app:/app
       - ./logs/auth-service:/app/logs
     command: sh -c "pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000"
@@ -22,6 +37,15 @@ services:
     environment:
       - DATABASE_URL=mysql+pymysql://${DB_USER}:${DB_PASSWORD}@db:3306/authdb
       - SECRET_KEY=${SECRET_KEY}
+=======
+      - /opt/auth-service:/app
+      - ./logs/auth-service:/app/logs 
+    command: sh -c "pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000"
+    ports: 
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=mysql+pymysql://user:pass@db:3306/authdb
+>>>>>>> origin/main
     depends_on:
       - db
 
@@ -36,16 +60,28 @@ services:
       - MYSQL_PASSWORD=${DB_PASSWORD}
       - MYSQL_DATABASE=authdb
     ports:
+<<<<<<< HEAD
       - "${DB_PORT}:3306"
 
   prometheus: # possède prometheus-fastapi-instrumentor pour exposer les métriques de l'application
+=======
+      - "${DB_PORT}:${DB_PORT}"
+  
+  prometheus: #Prometheus possède prometheus-fastapi-instrumentor permettant d'exposer les métriques de l'application
+>>>>>>> origin/main
     image: prom/prometheus:latest
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
+<<<<<<< HEAD
       - "${PROMETHEUS_PORT}:9090"
     depends_on:
       - auth-service
+=======
+      - "${PROMETHEUS_PORT}:${PROMETHEUS_PORT}"
+    depends_on:
+      - auth-service 
+>>>>>>> origin/main
 
   grafana:
     image: grafana/grafana:latest
@@ -57,12 +93,21 @@ services:
       - grafana-data:/var/lib/grafana
     depends_on:
       - prometheus
+<<<<<<< HEAD
 
   node-exporter: # Si le temps, ajouter node_exporter pour les infos du conteneur, voir pour mettre alertmanager
+=======
+    
+  node-exporter: #Si le temps ajouter node_exporter pour les infos du conteneur voir pour mettre alert manager
+>>>>>>> origin/main
     image: prom/node-exporter:latest
     ports:
       - "9100:9100"
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 volumes:
   db-data:
   grafana-data:
