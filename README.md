@@ -288,6 +288,8 @@ class User(Base):
 - Comment le LDAP est mocké pour la démo (dictionnaire Python ou table simulant un annuaire)
 - Flux SSO complet à montrer en live : login → MFA → JWT → accès à 2 routes protégées différentes avec le même jeton
 - Ce qu'on ajouterait en prod réelle (Redis, plusieurs workers Uvicorn + Nginx en load balancer, réplication PostgreSQL) sans l'avoir codé
+<<<<<<< HEAD
+=======
 
 
 
@@ -365,3 +367,4 @@ prometheus...) vu dans une des propositions n'est pas dans le scope MVP du
 projet (le document de cours dit explicitement que Docker/Redis restent du
 "discours de rapport" à 5 sans base de code). À voir ensemble si vous voulez
 vraiment partir là-dessus ou rester sur une seule app FastAPI comme ici.
+>>>>>>> origin/main

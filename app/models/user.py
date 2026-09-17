@@ -18,4 +18,8 @@ class User(Base):
     last_name = Column(String, nullable=True)
     role = Column(String, default="contribuable")  # utilisé par P3 pour le RBAC
     status = Column(String, default="active")
+<<<<<<< HEAD
     created_at = Column(DateTime, default=datetime.utcnow)
+=======
+    created_at = Column(DateTime, default=datetime.utcnow)
+>>>>>>> origin/main

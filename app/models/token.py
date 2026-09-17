@@ -23,4 +23,8 @@ class RefreshToken(Base):
 
 # Note pour P3 : les tokens de type "reset" (mot de passe oublié) et "activation"
 # peuvent réutiliser cette même table (ajouter une colonne `type`) ou une table à part
+<<<<<<< HEAD
 # selon ce que vous préférez — à voir ensemble.
+=======
+# selon ce que vous préférez — à voir ensemble.
+>>>>>>> origin/main
