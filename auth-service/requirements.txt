@@ -3,3 +3,6 @@ uvicorn
 sqlalchemy
 pymysql
 prometheus-fastapi-instrumentator
+passlib[bcrypt]
+python-jose[cryptography]
+pydantic[email]
