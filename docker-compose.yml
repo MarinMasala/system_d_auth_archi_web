@@ -21,6 +21,7 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=mysql+pymysql://${DB_USER}:${DB_PASSWORD}@db:3306/authdb
+      - SECRET_KEY=${SECRET_KEY}
     depends_on:
       - db
 
