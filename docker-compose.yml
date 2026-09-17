@@ -11,18 +11,18 @@ services:
       - "3001:3000"
     depends_on:
       - auth-service
-  
+
   auth-service:
     image: python:3.12
     working_dir: /app
     volumes:
       - /opt/auth-service:/app
-      - ./logs/auth-service:/app/logs 
+      - ./logs/auth-service:/app/logs
     command: sh -c "pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000"
-    ports: 
+    ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=mysql+pymysql://user:pass@db:3306/authdb
+      - DATABASE_URL=mysql+pymysql://${DB_USER}:${DB_PASSWORD}@db:3306/authdb
     depends_on:
       - db
 
@@ -37,16 +37,16 @@ services:
       - MYSQL_PASSWORD=${DB_PASSWORD}
       - MYSQL_DATABASE=authdb
     ports:
-      - "${DB_PORT}:${DB_PORT}"
-  
-  prometheus: #Prometheus possède prometheus-fastapi-instrumentor permettant d'exposer les métriques de l'application
+      - "${DB_PORT}:3306"
+
+  prometheus: # possède prometheus-fastapi-instrumentor pour exposer les métriques de l'application
     image: prom/prometheus:latest
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
-      - "${PROMETHEUS_PORT}:${PROMETHEUS_PORT}"
+      - "${PROMETHEUS_PORT}:9090"
     depends_on:
-      - auth-service 
+      - auth-service
 
   grafana:
     image: grafana/grafana:latest
@@ -58,12 +58,11 @@ services:
       - grafana-data:/var/lib/grafana
     depends_on:
       - prometheus
-    
-  node-exporter: #Si le temps ajouter node_exporter pour les infos du conteneur voir pour mettre alert manager
+
+  node-exporter: # Si le temps, ajouter node_exporter pour les infos du conteneur, voir pour mettre alertmanager
     image: prom/node-exporter:latest
     ports:
       - "9100:9100"
-
 
 volumes:
   db-data:
