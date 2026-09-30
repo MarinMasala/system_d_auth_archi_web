@@ -301,7 +301,60 @@ pip install -r requirements.txt
 ```
 
 Copier `.env` et remplir `SECRET_KEY` avec une vraie valeur aléatoire (et vos
-identifiants Mailtrap/Gmail une fois que P3 en a besoin).
+identifiants Mailtrap une fois que vous en avez besoin, voir section suivante).
+
+## Configurer les emails (Mailtrap)
+
+Le projet envoie deux emails : le lien d'activation de compte (`/register`) et le
+code OTP du MFA (`/login`). Ces emails ne partent jamais vers de vraies boîtes mail :
+ils sont interceptés par [Mailtrap](https://mailtrap.io) (sandbox gratuite), pour ne
+jamais spammer personne pendant les tests.
+
+Le fichier `.env` n'est **jamais commité** (il contient des secrets, il est dans
+`.gitignore`). Chaque personne qui clone le repo doit créer le sien avec ses propres
+identifiants Mailtrap. Deux façons de faire :
+
+### Option 1 — sandbox partagée (recommandé pour l'équipe)
+
+Une seule personne crée le compte Mailtrap, tout le monde utilise les mêmes
+identifiants : tous les emails (peu importe qui lance le serveur) arrivent dans la
+même boîte de test. Pratique pour vérifier ensemble un flux, ou pendant la soutenance.
+
+1. Une personne de l'équipe va sur https://mailtrap.io, crée un compte gratuit.
+2. Email Testing → Inboxes → sa sandbox (créée par défaut) → onglet **SMTP Settings**.
+3. Elle relève 4 valeurs : `Host`, `Port`, `Username`, `Password`.
+4. Elle partage ces 4 valeurs à l'équipe (Discord, etc. — ce sont des identifiants de
+   test, pas un vrai compte mail, donc pas grave de les partager entre vous).
+5. Chacun crée un fichier `.env` à la racine du projet (à côté de `README.md`) avec :
+   ```
+   SECRET_KEY=une-valeur-aleatoire-a-generer-vous-meme
+   MAIL_USERNAME=<le username partagé>
+   MAIL_PASSWORD=<le password partagé>
+   MAIL_FROM=no-reply@dgfip-sso.fr
+   MAIL_SERVER=sandbox.smtp.mailtrap.io
+   MAIL_PORT=2525
+   ```
+6. Tout le monde va voir les emails de tout le monde dans la même inbox Mailtrap —
+   normal, c'est le principe de cette option.
+
+### Option 2 — sandbox perso (isolée, si vous préférez ne pas partager)
+
+Chacun crée son propre compte Mailtrap gratuit et utilise ses propres identifiants.
+
+1. Chacun va sur https://mailtrap.io, crée son compte perso.
+2. Même chemin que ci-dessus (Email Testing → Inboxes → sa sandbox → SMTP Settings)
+   pour récupérer ses propres `Username`/`Password`.
+3. Chacun remplit son propre `.env` local avec **ses propres** valeurs (mêmes clés
+   que l'option 1, juste des identifiants différents).
+4. Chacun ne voit que les emails générés par ses propres tests en local.
+
+### Sans configurer Mailtrap du tout
+
+Ce n'est pas bloquant pour lancer le serveur : sans `.env` (ou avec des identifiants
+vides), `/register` et `/login` fonctionnent quand même — l'envoi d'email échoue
+juste silencieusement (loggé côté serveur), donc vous ne recevrez jamais le lien
+d'activation ni le code OTP. Utile pour tester rapidement les autres routes, mais
+pas pour tester le flux complet MFA/activation.
 
 ## Lancer le serveur
 
