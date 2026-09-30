@@ -305,8 +305,9 @@ identifiants Mailtrap une fois que vous en avez besoin, voir section suivante).
 
 ## Configurer les emails (Mailtrap)
 
-Le projet envoie deux emails : le lien d'activation de compte (`/register`) et le
-code OTP du MFA (`/login`). Ces emails ne partent jamais vers de vraies boîtes mail :
+Le projet envoie trois types d'emails : le lien d'activation de compte (`/register`),
+le code OTP du MFA (`/login`) et le lien de réinitialisation du mot de passe
+(`/forgot-password`). Ces emails ne partent jamais vers de vraies boîtes mail :
 ils sont interceptés par [Mailtrap](https://mailtrap.io) (sandbox gratuite), pour ne
 jamais spammer personne pendant les tests.
 
@@ -333,7 +334,10 @@ même boîte de test. Pratique pour vérifier ensemble un flux, ou pendant la so
    MAIL_FROM=no-reply@dgfip-sso.fr
    MAIL_SERVER=sandbox.smtp.mailtrap.io
    MAIL_PORT=2525
+    APP_BASE_URL=http://127.0.0.1:8000
    ```
+    `APP_BASE_URL` est l'origine utilisée dans le lien de réinitialisation. Gardez
+    cette valeur en local pour la démo; en déploiement, configurez l'URL HTTPS réelle.
 6. Tout le monde va voir les emails de tout le monde dans la même inbox Mailtrap —
    normal, c'est le principe de cette option.
 
@@ -351,10 +355,10 @@ Chacun crée son propre compte Mailtrap gratuit et utilise ses propres identifia
 ### Sans configurer Mailtrap du tout
 
 Ce n'est pas bloquant pour lancer le serveur : sans `.env` (ou avec des identifiants
-vides), `/register` et `/login` fonctionnent quand même — l'envoi d'email échoue
-juste silencieusement (loggé côté serveur), donc vous ne recevrez jamais le lien
-d'activation ni le code OTP. Utile pour tester rapidement les autres routes, mais
-pas pour tester le flux complet MFA/activation.
+vides), les routes fonctionnent quand même — l'envoi d'email échoue (loggé côté
+serveur), donc vous ne recevrez jamais le lien d'activation, le code OTP ni le lien
+de réinitialisation. Utile pour tester rapidement les autres routes, mais pas pour
+tester les flux complets d'activation, MFA et réinitialisation.
 
 ## Lancer le serveur
 
