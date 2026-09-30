@@ -181,6 +181,23 @@ def read_current_user(current_user: User = Depends(get_current_user)):
     """Exemple de route protégée : démontre que get_current_user fonctionne."""
     return current_user
 
+@router.post("/declaration", response_model=DeclarationOut)
+def submit_declaration(
+    payload: DeclarationCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    declaration = create_declaration(
+        db,
+        user_id=current_user.id,
+        fiscal_id=payload.fiscal_id,
+        year=payload.year,
+        income_type=payload.income_type,
+        amount=payload.amount,
+        comments=payload.comments,
+    )
+    return declaration
+
 
 # ---------------------------------------------------------------------------
 # EMPLACEMENT — reset mot de passe (pas encore fait)
