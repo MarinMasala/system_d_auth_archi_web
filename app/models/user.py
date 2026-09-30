@@ -3,7 +3,7 @@ Modèle User.
 """
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
 
 from app.database import Base
 
@@ -18,4 +18,5 @@ class User(Base):
     last_name = Column(String, nullable=True)
     role = Column(String, default="contribuable")  # utilisé par P3 pour le RBAC
     status = Column(String, default="active")
+    is_verified = Column(Boolean, default=False, nullable=False)  # email confirmé via lien d'activation
     created_at = Column(DateTime, default=datetime.utcnow)

@@ -1,6 +1,5 @@
 """
 Schémas Pydantic : ce que l'API accepte en entrée et renvoie en sortie.
-P3 : ajoutez ici vos schémas OTP / reset password (OtpVerify, PasswordSchema, etc.)
 """
 import re
 
@@ -47,3 +46,13 @@ class LoginSchema(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class MfaRequired(BaseModel):
+    mfa_required: bool = True
+    mfa_token: str
+
+
+class OtpVerify(BaseModel):
+    mfa_token: str
+    code: str

@@ -135,6 +135,28 @@ def get_current_user(
     return user
 
 
+# --- Pré-authentification MFA ----------------------------------------------
+# Jeton de très courte durée émis après vérification du mot de passe, avant l'OTP.
+# scope="mfa" l'empêche d'être accepté par get_current_user comme un vrai access token.
+MFA_TOKEN_EXPIRE_MINUTES = 5
+
+
+def create_mfa_token(user: User) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(minutes=MFA_TOKEN_EXPIRE_MINUTES)
+    payload = {"sub": str(user.id), "scope": "mfa", "exp": expire}
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def decode_mfa_token(token: str) -> int:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Jeton MFA invalide ou expiré")
+    if payload.get("scope") != "mfa":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Jeton MFA invalide")
+    return int(payload["sub"])
+
+
 def require_role(role: str):
     """
     Petit helper RBAC de base, en attendant celui plus complet de P3.
