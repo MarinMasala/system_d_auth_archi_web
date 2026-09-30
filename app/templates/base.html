@@ -19,6 +19,11 @@
             <a href="/home">Accueil</a>
             <a href="/declaration">Déclaration</a>
             <a href="/dashboard">Espace personnel</a>
+            
+            {% if user and user.role == "agent" %}
+            <a href="/admin">Administration</a>
+            {% endif %}
+
             {% if not user %}
             <a href="/login">Connexion</a>
             {% endif %}

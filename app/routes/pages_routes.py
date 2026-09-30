@@ -59,6 +59,22 @@ def forgot_password_page(request: Request, user: User | None = Depends(get_optio
     return templates.TemplateResponse(request=request, name="forgot_password.html", context={"user": user})
 
 
+@router.get("/reset-password/{token}", response_class=HTMLResponse, name="reset_password_page")
+def reset_password_page(
+    request: Request,
+    token: str,
+    user: User | None = Depends(get_optional_user),
+):
+    response = templates.TemplateResponse(
+        request=request,
+        name="reset_password.html",
+        context={"user": user, "token": token},
+    )
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response
+
+
 @router.get("/error", response_class=HTMLResponse, name="error_page")
 def error_page(request: Request, user: User | None = Depends(get_optional_user)):
     return templates.TemplateResponse(request=request, name="error.html", context={"user": user})

@@ -160,14 +160,52 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Mot de passe oublié : pas encore de route backend, mock volontaire ---
+  // --- Demande d'email de réinitialisation : POST /forgot-password ---
   const forgotForm = document.querySelector('form[data-form="forgot"]');
   if (forgotForm) {
-    forgotForm.addEventListener('submit', (event) => {
+    forgotForm.addEventListener('submit', async (event) => {
       event.preventDefault();
       const status = forgotForm.querySelector('.form-status');
-      showStatus(status, 'Demande reçue. Un email de réinitialisation a été envoyé.', false);
-      forgotForm.reset();
+      try {
+        const { ok, data } = await postJSON('/forgot-password', {
+          email: forgotForm.reset_email.value.trim(),
+        });
+        if (ok) {
+          showStatus(status, data?.detail || 'Si un compte correspond à cette adresse, un email lui a été envoyé.', false);
+          forgotForm.reset();
+          return;
+        }
+        showStatus(status, extractErrorMessage(data, 'Impossible de traiter la demande.'), true);
+      } catch (err) {
+        showStatus(status, 'Service momentanément indisponible. Réessayez plus tard.', true);
+      }
+    });
+  }
+
+  // --- Confirmation du nouveau mot de passe : POST /reset-password/{token} ---
+  const resetForm = document.querySelector('form[data-form="reset-password"]');
+  if (resetForm) {
+    resetForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const status = resetForm.querySelector('.form-status');
+      const password = resetForm.new_password.value;
+      if (password !== resetForm.confirm_new_password.value) {
+        showStatus(status, 'Les mots de passe ne correspondent pas.', true);
+        return;
+      }
+
+      try {
+        const token = resetForm.dataset.token;
+        const { ok, data } = await postJSON(`/reset-password/${encodeURIComponent(token)}`, { password });
+        if (ok) {
+          showStatus(status, data?.detail || 'Mot de passe modifié. Vous pouvez maintenant vous connecter.', false);
+          resetForm.reset();
+          return;
+        }
+        showStatus(status, extractErrorMessage(data, 'Impossible de modifier le mot de passe.'), true);
+      } catch (err) {
+        showStatus(status, 'Service momentanément indisponible. Réessayez plus tard.', true);
+      }
     });
   }
 

@@ -3,8 +3,7 @@ Routes d'authentification.
 Partie P2 : register, login, refresh-token, logout, /users/me.
 Partie P3 : MFA (/mfa/verify-otp) et activation de compte (/verify-email/{token}),
 en s'appuyant sur otp_service.py et verification_service.py.
-Reset mot de passe (/forgot-password, /reset-password/{token}) : pas encore fait,
-voir emplacement marqué ci-dessous.
+Réinitialisation de mot de passe par lien email à usage unique.
 """
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
 from app.models.connection_log import log_connection_attempt
@@ -27,11 +26,21 @@ from app.auth.core import (
     verify_password,
 )
 from app.auth.otp_service import create_and_send_otp, verify_otp
+from app.auth.password_reset_service import create_and_send_password_reset_email, reset_password
 from app.auth.verification_service import create_and_send_verification_email, verify_email_token
 from app.database import get_db
 from app.models.role import Role
 from app.models.user import User
-from app.schemas import LoginSchema, MfaRequired, OtpVerify, TokenResponse, UserCreate, UserOut
+from app.schemas import (
+    LoginSchema,
+    MfaRequired,
+    OtpVerify,
+    PasswordResetConfirm,
+    PasswordResetRequest,
+    TokenResponse,
+    UserCreate,
+    UserOut,
+)
 
 router = APIRouter(tags=["auth"])
 
@@ -199,12 +208,23 @@ def submit_declaration(
     return declaration
 
 
-# ---------------------------------------------------------------------------
-# EMPLACEMENT — reset mot de passe (pas encore fait)
-#
-# @router.post("/forgot-password")
-# def forgot_password(...): ...
-#
-# @router.post("/reset-password/{token}")
-# def reset_password(...): ...
-# ---------------------------------------------------------------------------
+@router.post("/forgot-password")
+async def forgot_password(payload: PasswordResetRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == payload.email).first()
+    if user and user.is_verified and user.role == "contribuable":
+        await create_and_send_password_reset_email(user, db)
+
+    return {
+        "detail": "Si un compte contribuable vérifié correspond à cette adresse, "
+        "un lien de réinitialisation vient de lui être envoyé."
+    }
+
+
+@router.post("/reset-password/{token}")
+def reset_password_route(
+    token: str,
+    payload: PasswordResetConfirm,
+    db: Session = Depends(get_db),
+):
+    reset_password(token, payload.password, db)
+    return {"detail": "Mot de passe modifié. Vous pouvez maintenant vous connecter."}
