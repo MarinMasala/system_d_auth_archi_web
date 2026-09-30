@@ -47,3 +47,13 @@ class LoginSchema(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class MfaRequired(BaseModel):
+    mfa_required: bool = True
+    mfa_token: str
+
+
+class OtpVerify(BaseModel):
+    mfa_token: str
+    code: str
