@@ -6,7 +6,8 @@ en s'appuyant sur otp_service.py et verification_service.py.
 Reset mot de passe (/forgot-password, /reset-password/{token}) : pas encore fait,
 voir emplacement marqué ci-dessous.
 """
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
+from app.models.connection_log import log_connection_attempt
 from sqlalchemy.orm import Session
 
 from app.auth.core import (
@@ -80,25 +81,33 @@ def _issue_session_cookies(response: Response, user: User, db: Session) -> Token
 
 
 @router.post("/login", response_model=MfaRequired)
-async def login(credentials: LoginSchema, db: Session = Depends(get_db)):
+async def login(credentials: LoginSchema, request: Request, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == credentials.email).first()
 
+    ip_address = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+
     if not user or not verify_password(credentials.password, user.password_hash):
-        # TODO P5 : logger la tentative échouée dans connection_logs ici
+        log_connection_attempt(
+            db,
+            email=credentials.email,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            status="failed",
+            user_id=user.id if user else None,
+        )
         raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect")
 
     if not user.is_verified:
         raise HTTPException(status_code=403, detail="Compte non activé, vérifiez vos emails")
 
-    # 1er facteur (mot de passe) validé : on envoie l'OTP et on attend /mfa/verify-otp
-    # avant de poser les cookies de session.
     await create_and_send_otp(user, db)
     mfa_token = create_mfa_token(user)
     return MfaRequired(mfa_token=mfa_token)
 
 
 @router.post("/mfa/verify-otp", response_model=TokenResponse)
-def mfa_verify_otp(payload: OtpVerify, response: Response, db: Session = Depends(get_db)):
+def mfa_verify_otp(payload: OtpVerify, request: Request, response: Response, db: Session = Depends(get_db)):
     user_id = decode_mfa_token(payload.mfa_token)
     verify_otp(user_id, payload.code, db)
 
@@ -106,7 +115,14 @@ def mfa_verify_otp(payload: OtpVerify, response: Response, db: Session = Depends
     if not user:
         raise HTTPException(status_code=401, detail="Utilisateur introuvable")
 
-    # TODO P5 : logger la connexion réussie dans connection_logs ici
+    log_connection_attempt(
+        db,
+        email=user.email,
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+        status="success",
+        user_id=user.id,
+    )
     return _issue_session_cookies(response, user, db)
 
 
