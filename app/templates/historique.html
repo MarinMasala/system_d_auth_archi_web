@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Historique des déclarations | DGFiP{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <h2>Historique des déclarations</h2>
+  <p>Retrouvez ici l'ensemble des déclarations que vous avez transmises.</p>
+</section>
+
+<div class="dashboard-grid">
+  {% if declarations %}
+    {% for d in declarations %}
+    <article class="service-tile">
+      <div class="mini-icon">D</div>
+      <h3>Exercice {{ d.year }}</h3>
+      <p>{{ d.income_type }} — {{ '%.2f'|format(d.amount) }} €</p>
+      <p>Transmise le {{ d.created_at.strftime('%d/%m/%Y à %H:%M') }}</p>
+      <p>N° fiscal : {{ d.fiscal_id }}</p>
+    </article>
+    {% endfor %}
+  {% else %}
+    <p>Vous n'avez encore transmis aucune déclaration.</p>
+  {% endif %}
+</div>
+{% endblock %}

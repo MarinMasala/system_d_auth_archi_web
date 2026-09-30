@@ -10,6 +10,9 @@ from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
 from app.models.connection_log import log_connection_attempt
 from sqlalchemy.orm import Session
 
+from app.models.declaration import create_declaration
+from app.schemas import DeclarationCreate, DeclarationOut
+
 from app.auth.core import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     REFRESH_TOKEN_EXPIRE_DAYS,
