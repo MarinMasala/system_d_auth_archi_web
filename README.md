@@ -290,7 +290,6 @@ class User(Base):
 - Ce qu'on ajouterait en prod réelle (Redis, plusieurs workers Uvicorn + Nginx en load balancer, réplication PostgreSQL) sans l'avoir codé
 
 
-
 # SSO DGFiP — Architecture commune du groupe
 
 ## Installation
@@ -302,7 +301,64 @@ pip install -r requirements.txt
 ```
 
 Copier `.env` et remplir `SECRET_KEY` avec une vraie valeur aléatoire (et vos
-identifiants Mailtrap/Gmail une fois que P3 en a besoin).
+identifiants Mailtrap une fois que vous en avez besoin, voir section suivante).
+
+## Configurer les emails (Mailtrap)
+
+Le projet envoie trois types d'emails : le lien d'activation de compte (`/register`),
+le code OTP du MFA (`/login`) et le lien de réinitialisation du mot de passe
+(`/forgot-password`). Ces emails ne partent jamais vers de vraies boîtes mail :
+ils sont interceptés par [Mailtrap](https://mailtrap.io) (sandbox gratuite), pour ne
+jamais spammer personne pendant les tests.
+
+Le fichier `.env` n'est **jamais commité** (il contient des secrets, il est dans
+`.gitignore`). Chaque personne qui clone le repo doit créer le sien avec ses propres
+identifiants Mailtrap. Deux façons de faire :
+
+### Option 1 — sandbox partagée (recommandé pour l'équipe)
+
+Une seule personne crée le compte Mailtrap, tout le monde utilise les mêmes
+identifiants : tous les emails (peu importe qui lance le serveur) arrivent dans la
+même boîte de test. Pratique pour vérifier ensemble un flux, ou pendant la soutenance.
+
+1. Une personne de l'équipe va sur https://mailtrap.io, crée un compte gratuit.
+2. Email Testing → Inboxes → sa sandbox (créée par défaut) → onglet **SMTP Settings**.
+3. Elle relève 4 valeurs : `Host`, `Port`, `Username`, `Password`.
+4. Elle partage ces 4 valeurs à l'équipe (Discord, etc. — ce sont des identifiants de
+   test, pas un vrai compte mail, donc pas grave de les partager entre vous).
+5. Chacun crée un fichier `.env` à la racine du projet (à côté de `README.md`) avec :
+   ```
+   SECRET_KEY=une-valeur-aleatoire-a-generer-vous-meme
+   MAIL_USERNAME=<le username partagé>
+   MAIL_PASSWORD=<le password partagé>
+   MAIL_FROM=no-reply@dgfip-sso.fr
+   MAIL_SERVER=sandbox.smtp.mailtrap.io
+   MAIL_PORT=2525
+    APP_BASE_URL=http://127.0.0.1:8000
+   ```
+    `APP_BASE_URL` est l'origine utilisée dans le lien de réinitialisation. Gardez
+    cette valeur en local pour la démo; en déploiement, configurez l'URL HTTPS réelle.
+6. Tout le monde va voir les emails de tout le monde dans la même inbox Mailtrap —
+   normal, c'est le principe de cette option.
+
+### Option 2 — sandbox perso (isolée, si vous préférez ne pas partager)
+
+Chacun crée son propre compte Mailtrap gratuit et utilise ses propres identifiants.
+
+1. Chacun va sur https://mailtrap.io, crée son compte perso.
+2. Même chemin que ci-dessus (Email Testing → Inboxes → sa sandbox → SMTP Settings)
+   pour récupérer ses propres `Username`/`Password`.
+3. Chacun remplit son propre `.env` local avec **ses propres** valeurs (mêmes clés
+   que l'option 1, juste des identifiants différents).
+4. Chacun ne voit que les emails générés par ses propres tests en local.
+
+### Sans configurer Mailtrap du tout
+
+Ce n'est pas bloquant pour lancer le serveur : sans `.env` (ou avec des identifiants
+vides), les routes fonctionnent quand même — l'envoi d'email échoue (loggé côté
+serveur), donc vous ne recevrez jamais le lien d'activation, le code OTP ni le lien
+de réinitialisation. Utile pour tester rapidement les autres routes, mais pas pour
+tester les flux complets d'activation, MFA et réinitialisation.
 
 ## Lancer le serveur
 
@@ -331,12 +387,12 @@ sso-dgfip/
     │   └── connection_log.py    (P5 — à compléter)
     ├── auth/
     │   ├── core.py              (P2 — fait : hash, JWT, refresh, get_current_user)
-    │   ├── routes.py            (P2 — fait : register/login/refresh/logout
-    │   │                          + emplacements marqués pour les routes MFA/reset de P3)
-    │   ├── mail_config.py       (P3 — à compléter)
-    │   ├── otp_service.py       (P3 — à compléter)
-    │   └── verification_service.py (P3 — à compléter)
-    ├── routers/
+    │   ├── routes.py            (P2/P3 — fait : register/login/refresh/logout
+    │   │                          + MFA par OTP email + activation de compte par email)
+    │   ├── mail_config.py       (P3 — fait)
+    │   ├── otp_service.py       (P3 — fait)
+    │   └── verification_service.py (P3 — fait)
+    ├── routes/
     │   └── pages_routes.py      (P4 — à compléter, sert les templates Jinja2)
     ├── templates/                (P4)
     └── static/                   (P4)
@@ -354,14 +410,13 @@ Le flux register → login → route protégée (`/users/me` via `get_current_us
   en bas du fichier. Pour un helper RBAC minimal en attendant le vôtre, il y a
   déjà `require_role()` dans `app/auth/core.py`.
 - **P4** : les routes `/register` et `/login` sont prêtes, à brancher sur vos
-  formulaires Jinja2 dans `app/routers/pages_routes.py`.
+  formulaires Jinja2 dans `app/routes/pages_routes.py`.
 - **P5** : deux `# TODO P5` sont marqués dans `login()` (`app/auth/routes.py`)
   pour brancher `connection_logs` (succès et échec de connexion).
 
-## À trancher en groupe
+## Décision d'équipe : monitoring
 
-Le `docker-compose.yml` / architecture microservices (auth-service séparé,
-prometheus...) vu dans une des propositions n'est pas dans le scope MVP du
-projet (le document de cours dit explicitement que Docker/Redis restent du
-"discours de rapport" à 5 sans base de code). À voir ensemble si vous voulez
-vraiment partir là-dessus ou rester sur une seule app FastAPI comme ici.
+Prometheus/Grafana/node-exporter (proposés dans `docker-compose.yml`) sont
+retirés : hors scope MVP (le document de cours les classe explicitement en
+"discours de rapport" à 5 sans base de code). On garde `frontend` + `auth-service`
++ `db` dans le compose, le reste reste au niveau du rapport/soutenance.

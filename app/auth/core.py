@@ -135,6 +135,45 @@ def get_current_user(
     return user
 
 
+def get_optional_user(
+    access_token: str | None = Cookie(default=None),
+    db: Session = Depends(get_db),
+) -> User | None:
+    """
+    Comme get_current_user, mais renvoie None au lieu de lever une 401.
+    Utilisée par les pages Jinja2 (P4) pour savoir si on doit afficher
+    "Connexion" ou "Mon compte" dans la nav, sans bloquer l'affichage de la page.
+    """
+    if access_token is None:
+        return None
+    try:
+        return get_current_user(access_token=access_token, db=db)
+    except HTTPException:
+        return None
+
+
+# --- Pré-authentification MFA ----------------------------------------------
+# Jeton de très courte durée émis après vérification du mot de passe, avant l'OTP.
+# scope="mfa" l'empêche d'être accepté par get_current_user comme un vrai access token.
+MFA_TOKEN_EXPIRE_MINUTES = 5
+
+
+def create_mfa_token(user: User) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(minutes=MFA_TOKEN_EXPIRE_MINUTES)
+    payload = {"sub": str(user.id), "scope": "mfa", "exp": expire}
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def decode_mfa_token(token: str) -> int:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Jeton MFA invalide ou expiré")
+    if payload.get("scope") != "mfa":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Jeton MFA invalide")
+    return int(payload["sub"])
+
+
 def require_role(role: str):
     """
     Petit helper RBAC de base, en attendant celui plus complet de P3.
@@ -144,4 +183,28 @@ def require_role(role: str):
         if current_user.role != role:
             raise HTTPException(status_code=403, detail="Accès refusé")
         return current_user
+    return checker
+
+
+def require_permission(scope: str):
+    """
+    Dépendance FastAPI RBAC : exige qu'un des rôles de l'utilisateur possède
+    la permission identifiée par ``scope``.
+
+    Usage :
+        current_user: User = Depends(require_permission("declaration:write"))
+    """
+    if not scope or not scope.strip():
+        raise ValueError("Le scope de permission ne peut pas être vide")
+
+    def checker(current_user: User = Depends(get_current_user)) -> User:
+        has_permission = any(
+            permission.name == scope
+            for role in current_user.roles
+            for permission in role.permissions
+        )
+        if not has_permission:
+            raise HTTPException(status_code=403, detail="Accès refusé")
+        return current_user
+
     return checker

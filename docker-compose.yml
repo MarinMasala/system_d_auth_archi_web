@@ -6,23 +6,24 @@ services:
     working_dir: /app
     volumes:
       - ./frontend:/app
-    command: sh -c "npm install && npm start"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
     ports:
-      - "3001:3000"
+      - "3001:5173"
     depends_on:
       - auth-service
-  
+
   auth-service:
     image: python:3.12
     working_dir: /app
     volumes:
-      - /opt/auth-service:/app
-      - ./logs/auth-service:/app/logs 
-    command: sh -c "pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000"
-    ports: 
+      - .:/app
+      - ./logs/auth-service:/app/logs
+    command: sh -c "pip install -r requirements.txt && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=mysql+pymysql://user:pass@db:3306/authdb
+      - DATABASE_URL=mysql+pymysql://${DB_USER}:${DB_PASSWORD}@db:3306/authdb
+      - SECRET_KEY=${SECRET_KEY}
     depends_on:
       - db
 
@@ -37,34 +38,7 @@ services:
       - MYSQL_PASSWORD=${DB_PASSWORD}
       - MYSQL_DATABASE=authdb
     ports:
-      - "${DB_PORT}:${DB_PORT}"
-  
-  prometheus: #Prometheus possède prometheus-fastapi-instrumentor permettant d'exposer les métriques de l'application
-    image: prom/prometheus:latest
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "${PROMETHEUS_PORT}:${PROMETHEUS_PORT}"
-    depends_on:
-      - auth-service 
-
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "${GRAFANA_PORT}:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
-    volumes:
-      - grafana-data:/var/lib/grafana
-    depends_on:
-      - prometheus
-    
-  node-exporter: #Si le temps ajouter node_exporter pour les infos du conteneur voir pour mettre alert manager
-    image: prom/node-exporter:latest
-    ports:
-      - "9100:9100"
-
+      - "${DB_PORT}:3306"
 
 volumes:
   db-data:
-  grafana-data:

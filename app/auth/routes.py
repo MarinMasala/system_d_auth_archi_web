@@ -1,33 +1,49 @@
 """
 Routes d'authentification.
 Partie P2 : register, login, refresh-token, logout, /users/me.
-Partie P3 (à ajouter dans ce même fichier, voir emplacements marqués ci-dessous) :
-MFA (/mfa/send-otp, /mfa/verify-otp) et reset mot de passe (/forgot-password, /reset-password/{token}),
+Partie P3 : MFA (/mfa/verify-otp) et activation de compte (/verify-email/{token}),
 en s'appuyant sur otp_service.py et verification_service.py.
+Réinitialisation de mot de passe par lien email à usage unique.
 """
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
+from app.models.connection_log import log_connection_attempt
 from sqlalchemy.orm import Session
 
 from app.auth.core import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     REFRESH_TOKEN_EXPIRE_DAYS,
     create_access_token,
+    create_mfa_token,
     create_refresh_token,
+    decode_mfa_token,
     get_current_user,
     get_valid_refresh_token,
     hash_password,
     revoke_refresh_token,
     verify_password,
 )
+from app.auth.otp_service import create_and_send_otp, verify_otp
+from app.auth.password_reset_service import create_and_send_password_reset_email, reset_password
+from app.auth.verification_service import create_and_send_verification_email, verify_email_token
 from app.database import get_db
+from app.models.role import Role
 from app.models.user import User
-from app.schemas import LoginSchema, TokenResponse, UserCreate, UserOut
+from app.schemas import (
+    LoginSchema,
+    MfaRequired,
+    OtpVerify,
+    PasswordResetConfirm,
+    PasswordResetRequest,
+    TokenResponse,
+    UserCreate,
+    UserOut,
+)
 
 router = APIRouter(tags=["auth"])
 
 
 @router.post("/register", response_model=UserOut)
-def register(user: UserCreate, db: Session = Depends(get_db)):
+async def register(user: UserCreate, db: Session = Depends(get_db)):
     existing = db.query(User).filter(User.email == user.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Cet email est déjà utilisé")
@@ -38,28 +54,31 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         first_name=user.first_name,
         last_name=user.last_name,
     )
+    # RBAC : tout nouveau contribuable reçoit le rôle métier par défaut.
+    role = db.query(Role).filter(Role.name == "contribuable").first()
+    if role is None:
+        role = Role(name="contribuable")
+        db.add(role)
+        db.flush()
+    db_user.roles.append(role)
+
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+
+    await create_and_send_verification_email(db_user, db)
     return db_user
 
 
-@router.post("/login", response_model=TokenResponse)
-def login(credentials: LoginSchema, response: Response, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == credentials.email).first()
+@router.get("/verify-email/{token}")
+def verify_email(token: str, db: Session = Depends(get_db)):
+    verify_email_token(token, db)
+    return {"detail": "Compte activé, vous pouvez vous connecter."}
 
-    if not user or not verify_password(credentials.password, user.password_hash):
-        # TODO P5 : logger la tentative échouée dans connection_logs ici
-        raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect")
 
-    # TODO P3 : si MFA activé, ne pas poser les cookies tout de suite —
-    # renvoyer un statut "mfa_required" et attendre /mfa/verify-otp avant
-    # d'appeler create_access_token / create_refresh_token.
-
+def _issue_session_cookies(response: Response, user: User, db: Session) -> TokenResponse:
     access_token = create_access_token(user)
     refresh_token = create_refresh_token(user, db)
-
-    # TODO P5 : logger la connexion réussie dans connection_logs ici
 
     response.set_cookie(
         key="access_token",
@@ -76,8 +95,53 @@ def login(credentials: LoginSchema, response: Response, db: Session = Depends(ge
         max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
         samesite="lax",
     )
-
     return TokenResponse(access_token=access_token)
+
+
+@router.post("/login", response_model=MfaRequired)
+async def login(credentials: LoginSchema, request: Request, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == credentials.email).first()
+
+    ip_address = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+
+    if not user or not verify_password(credentials.password, user.password_hash):
+        log_connection_attempt(
+            db,
+            email=credentials.email,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            status="failed",
+            user_id=user.id if user else None,
+        )
+        raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect")
+
+    if not user.is_verified:
+        raise HTTPException(status_code=403, detail="Compte non activé, vérifiez vos emails")
+
+    await create_and_send_otp(user, db)
+    mfa_token = create_mfa_token(user)
+    return MfaRequired(mfa_token=mfa_token)
+
+
+@router.post("/mfa/verify-otp", response_model=TokenResponse)
+def mfa_verify_otp(payload: OtpVerify, request: Request, response: Response, db: Session = Depends(get_db)):
+    user_id = decode_mfa_token(payload.mfa_token)
+    verify_otp(user_id, payload.code, db)
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Utilisateur introuvable")
+
+    log_connection_attempt(
+        db,
+        email=user.email,
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+        status="success",
+        user_id=user.id,
+    )
+    return _issue_session_cookies(response, user, db)
 
 
 @router.post("/refresh-token", response_model=TokenResponse)
@@ -124,19 +188,23 @@ def read_current_user(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-# ---------------------------------------------------------------------------
-# EMPLACEMENT P3 — MFA & reset mot de passe
-# À ajouter ici, en s'appuyant sur otp_service.py / verification_service.py :
-#
-# @router.post("/mfa/send-otp")
-# def send_otp(...): ...
-#
-# @router.post("/mfa/verify-otp")
-# def verify_otp(...): ...
-#
-# @router.post("/forgot-password")
-# def forgot_password(...): ...
-#
-# @router.post("/reset-password/{token}")
-# def reset_password(...): ...
-# ---------------------------------------------------------------------------
+@router.post("/forgot-password")
+async def forgot_password(payload: PasswordResetRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == payload.email).first()
+    if user and user.is_verified and user.role == "contribuable":
+        await create_and_send_password_reset_email(user, db)
+
+    return {
+        "detail": "Si un compte contribuable vérifié correspond à cette adresse, "
+        "un lien de réinitialisation vient de lui être envoyé."
+    }
+
+
+@router.post("/reset-password/{token}")
+def reset_password_route(
+    token: str,
+    payload: PasswordResetConfirm,
+    db: Session = Depends(get_db),
+):
+    reset_password(token, payload.password, db)
+    return {"detail": "Mot de passe modifié. Vous pouvez maintenant vous connecter."}
