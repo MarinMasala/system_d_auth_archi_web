@@ -19,10 +19,17 @@
             <a href="/home">Accueil</a>
             <a href="/declaration">Déclaration</a>
             <a href="/dashboard">Espace personnel</a>
+            {% if not user %}
             <a href="/login">Connexion</a>
+            {% endif %}
           </nav>
 
+          {% if user %}
+          <span class="nav-user">Bonjour {{ user.first_name or user.email }}</span>
+          <button type="button" class="nav-cta" data-action="logout">Déconnexion</button>
+          {% else %}
           <a class="nav-cta" href="/register">Créer un compte</a>
+          {% endif %}
         </div>
       </header>
 

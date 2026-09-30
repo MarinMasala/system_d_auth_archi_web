@@ -135,6 +135,23 @@ def get_current_user(
     return user
 
 
+def get_optional_user(
+    access_token: str | None = Cookie(default=None),
+    db: Session = Depends(get_db),
+) -> User | None:
+    """
+    Comme get_current_user, mais renvoie None au lieu de lever une 401.
+    Utilisée par les pages Jinja2 (P4) pour savoir si on doit afficher
+    "Connexion" ou "Mon compte" dans la nav, sans bloquer l'affichage de la page.
+    """
+    if access_token is None:
+        return None
+    try:
+        return get_current_user(access_token=access_token, db=db)
+    except HTTPException:
+        return None
+
+
 # --- Pré-authentification MFA ----------------------------------------------
 # Jeton de très courte durée émis après vérification du mot de passe, avant l'OTP.
 # scope="mfa" l'empêche d'être accepté par get_current_user comme un vrai access token.
