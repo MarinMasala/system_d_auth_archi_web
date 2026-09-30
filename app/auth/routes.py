@@ -25,6 +25,7 @@ from app.auth.core import (
 from app.auth.otp_service import create_and_send_otp, verify_otp
 from app.auth.verification_service import create_and_send_verification_email, verify_email_token
 from app.database import get_db
+from app.models.role import Role
 from app.models.user import User
 from app.schemas import LoginSchema, MfaRequired, OtpVerify, TokenResponse, UserCreate, UserOut
 
@@ -43,6 +44,14 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
         first_name=user.first_name,
         last_name=user.last_name,
     )
+    # RBAC : tout nouveau contribuable reçoit le rôle métier par défaut.
+    role = db.query(Role).filter(Role.name == "contribuable").first()
+    if role is None:
+        role = Role(name="contribuable")
+        db.add(role)
+        db.flush()
+    db_user.roles.append(role)
+
     db.add(db_user)
     db.commit()
     db.refresh(db_user)

@@ -11,10 +11,13 @@ from fastapi.staticfiles import StaticFiles
 
 from app import models  # noqa: F401  -- importe tous les modèles pour create_all
 from app.auth.routes import router as auth_router
-from app.database import Base, engine
+from app.database import Base, SessionLocal, engine
+from app.models.role import seed_default_rbac
 from app.routes.pages_routes import router as pages_router
 
 Base.metadata.create_all(bind=engine)
+with SessionLocal() as _db:
+    seed_default_rbac(_db)
 
 app = FastAPI(title="DGFiP SSO — API d'authentification")
 

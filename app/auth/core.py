@@ -184,3 +184,27 @@ def require_role(role: str):
             raise HTTPException(status_code=403, detail="Accès refusé")
         return current_user
     return checker
+
+
+def require_permission(scope: str):
+    """
+    Dépendance FastAPI RBAC : exige qu'un des rôles de l'utilisateur possède
+    la permission identifiée par ``scope``.
+
+    Usage :
+        current_user: User = Depends(require_permission("declaration:write"))
+    """
+    if not scope or not scope.strip():
+        raise ValueError("Le scope de permission ne peut pas être vide")
+
+    def checker(current_user: User = Depends(get_current_user)) -> User:
+        has_permission = any(
+            permission.name == scope
+            for role in current_user.roles
+            for permission in role.permissions
+        )
+        if not has_permission:
+            raise HTTPException(status_code=403, detail="Accès refusé")
+        return current_user
+
+    return checker
