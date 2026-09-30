@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Erreur | DGFiP{% endblock %}
+
+{% block content %}
+<section class="main-grid">
+  <div class="card form-card">
+    <div class="page-header">
+      <h2>Une erreur est survenue</h2>
+      <p>Nous n'avons pas pu traiter votre demande. Merci de réessayer ou de revenir à l'accueil.</p>
+    </div>
+
+    <div class="form-actions">
+      <a class="btn btn-primary" href="/home">Retour à l'accueil</a>
+      <a class="inline-link" href="/login">Se reconnecter</a>
+    </div>
+  </div>
+
+  <aside class="info-panel">
+    <div class="page-header">
+      <h2>Que faire ?</h2>
+    </div>
+    <ul class="info-list">
+      <li><strong>Vérifiez :</strong> votre connexion internet et vos informations de connexion.</li>
+      <li><strong>Réessayez :</strong> l'opération dans quelques instants.</li>
+      <li><strong>Contact :</strong> contactez l'assistance si le problème persiste.</li>
+    </ul>
+  </aside>
+</section>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Validation MFA | DGFiP{% endblock %}
+
+{% block content %}
+<section class="main-grid">
+  <div class="card form-card">
+    <div class="page-header">
+      <h2>Validation de sécurité</h2>
+      <p>Entrez le code reçu par email pour confirmer votre identité.</p>
+    </div>
+
+    <form class="form-grid" data-form="mfa" novalidate>
+      <div class="field">
+        <label for="otp_1">Code de validation</label>
+        <div class="otp-box">
+          <input type="text" maxlength="1" inputmode="numeric" aria-label="Chiffre 1" />
+          <input type="text" maxlength="1" inputmode="numeric" aria-label="Chiffre 2" />
+          <input type="text" maxlength="1" inputmode="numeric" aria-label="Chiffre 3" />
+          <input type="text" maxlength="1" inputmode="numeric" aria-label="Chiffre 4" />
+          <input type="text" maxlength="1" inputmode="numeric" aria-label="Chiffre 5" />
+          <input type="text" maxlength="1" inputmode="numeric" aria-label="Chiffre 6" />
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit">Valider le code</button>
+        <a class="inline-link" href="/login">Retour à la connexion</a>
+      </div>
+
+      <div class="form-status" aria-live="polite"></div>
+    </form>
+  </div>
+
+  <aside class="info-panel">
+    <div class="page-header">
+      <h2>Informations</h2>
+    </div>
+    <ul class="info-list">
+      <li><strong>Durée :</strong> le code est valide pendant 5 minutes.</li>
+      <li><strong>Confiance :</strong> ne partagez jamais ce code avec un tiers.</li>
+      <li><strong>Assistance :</strong> contactez le service si vous n'avez pas reçu le message.</li>
+    </ul>
+  </aside>
+</section>
+{% endblock %}

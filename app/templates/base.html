@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Espace fiscal DGFiP{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a href="/home" class="brand" aria-label="Accueil DGFiP">
+            <span class="brand-mark">DG</span>
+            <span>DGFiP</span>
+          </a>
+
+          <nav class="main-nav" aria-label="Navigation principale">
+            <a href="/home">Accueil</a>
+            <a href="/declaration">Déclaration</a>
+            <a href="/dashboard">Espace personnel</a>
+            <a href="/login">Connexion</a>
+          </nav>
+
+          <a class="nav-cta" href="/register">Créer un compte</a>
+        </div>
+      </header>
+
+      <main class="container">
+        {% block content %}{% endblock %}
+      </main>
+
+      <footer class="footer">
+        <div class="footer-inner">
+          <span>© <span id="footer-year"></span> Direction générale des finances publiques</span>
+          <span>Service public numérique</span>
+        </div>
+      </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Connexion | DGFiP{% endblock %}
+
+{% block content %}
+<section class="main-grid">
+  <div class="card form-card">
+    <div class="page-header">
+      <h2>Connexion</h2>
+      <p>Accédez à votre espace personnel pour gérer vos démarches fiscales.</p>
+    </div>
+
+    <form class="form-grid" data-form="login" novalidate>
+      <div class="field">
+        <label for="email">Adresse email</label>
+        <input id="email" name="email" type="email" placeholder="nom@domaine.fr" required />
+      </div>
+
+      <div class="field">
+        <label for="password">Mot de passe</label>
+        <div class="password-wrap">
+          <input id="password" name="password" type="password" placeholder="Votre mot de passe" required />
+          <button type="button" class="password-toggle" aria-label="Afficher le mot de passe">Afficher</button>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit">Se connecter</button>
+        <a class="inline-link" href="/forgot-password">Mot de passe oublié ?</a>
+      </div>
+
+      <div class="form-status" aria-live="polite"></div>
+    </form>
+  </div>
+
+  <aside class="info-panel">
+    <div class="page-header">
+      <h2>Besoin d'aide ?</h2>
+    </div>
+
+    <ul class="info-list">
+      <li><strong>1.</strong> Vérifiez votre identifiant fiscal ou votre adresse email.</li>
+      <li><strong>2.</strong> Utilisez votre mot de passe du compte service public.</li>
+      <li><strong>3.</strong> En cas de souci, demandez une réinitialisation sécurisée.</li>
+    </ul>
+  </aside>
+</section>
+{% endblock %}

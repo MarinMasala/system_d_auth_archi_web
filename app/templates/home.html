@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Accueil | DGFiP{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-grid">
+    <div>
+      <span class="eyebrow">Service public numérique</span>
+      <h1>Déclarez, gérez et sécurisez vos démarches fiscales.</h1>
+      <p>
+        Accédez à votre espace personnel de la DGFiP pour effectuer votre déclaration,
+        suivre vos demandes et sécuriser votre connexion avec une authentification fiable.
+      </p>
+
+      <div class="cta-row">
+        <a class="btn btn-primary" href="/login">Se connecter</a>
+        <a class="btn btn-secondary" href="/register">Créer un compte</a>
+      </div>
+    </div>
+
+    <div class="hero-card">
+      <ul class="service-list">
+        <li>
+          <span class="service-icon">01</span>
+          <div>
+            <strong>Déclaration en ligne</strong><br />
+            <span>Complétez votre déclaration en quelques minutes.</span>
+          </div>
+        </li>
+        <li>
+          <span class="service-icon">02</span>
+          <div>
+            <strong>Authentification sécurisée</strong><br />
+            <span>Connexion et validation MFA simplifiées.</span>
+          </div>
+        </li>
+        <li>
+          <span class="service-icon">03</span>
+          <div>
+            <strong>Suivi administratif</strong><br />
+            <span>Consultez votre espace, historique et services.</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="section-title">Pourquoi utiliser l'espace DGFiP ?</h2>
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <strong>3 min</strong>
+      <span>Temps moyen pour finaliser une déclaration simple.</span>
+    </div>
+    <div class="metric-card">
+      <strong>99.9%</strong>
+      <span>Disponibilité du service avec accès sécurisé.</span>
+    </div>
+    <div class="metric-card">
+      <strong>24/7</strong>
+      <span>Disponibilité de l'espace personnel pour suivi et gestion.</span>
+    </div>
+  </div>
+</section>
+{% endblock %}

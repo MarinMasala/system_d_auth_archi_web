@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Espace personnel | DGFiP{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <h2>Espace personnel</h2>
+  <p>Bienvenue sur votre espace sécurisé. Consultez vos services et gérez vos démarches.</p>
+</section>
+
+<div class="dashboard-grid">
+  <article class="service-tile">
+    <div class="mini-icon">D</div>
+    <h3>Déclaration</h3>
+    <p>Renseignez votre situation et transmettez votre déclaration fiscale.</p>
+    <p><a class="inline-link" href="/declaration">Accéder</a></p>
+  </article>
+
+  <article class="service-tile">
+    <div class="mini-icon">M</div>
+    <h3>Mes données</h3>
+    <p>Consultez vos informations personnelles et les éléments de votre dossier.</p>
+    <p><a class="inline-link" href="/login">Ouvrir</a></p>
+  </article>
+
+  <article class="service-tile">
+    <div class="mini-icon">H</div>
+    <h3>Historique</h3>
+    <p>Suivez les dernières connexions et les actions effectuées sur votre compte.</p>
+    <p><a class="inline-link" href="/error">Voir</a></p>
+  </article>
+
+  <article class="service-tile">
+    <div class="mini-icon">S</div>
+    <h3>Sécurité</h3>
+    <p>Validez votre code de sécurité et gardez l'accès à votre compte protégé.</p>
+    <p><a class="inline-link" href="/mfa">Configurer</a></p>
+  </article>
+</div>
+{% endblock %}
