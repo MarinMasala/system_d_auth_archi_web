@@ -10,39 +10,39 @@ templates = Jinja2Templates(directory=str(Path(__file__).resolve().parents[1] / 
 
 @router.get("/home", response_class=HTMLResponse, name="home_page")
 def home_page(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="home.html", context={})
 
 
 @router.get("/login", response_class=HTMLResponse, name="login_page")
 def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="login.html", context={})
 
 
 @router.get("/register", response_class=HTMLResponse, name="register_page")
 def register_page(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="register.html", context={})
 
 
 @router.get("/declaration", response_class=HTMLResponse, name="declaration_page")
 def declaration_page(request: Request):
-    return templates.TemplateResponse("declaration.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="declaration.html", context={})
 
 
 @router.get("/dashboard", response_class=HTMLResponse, name="dashboard_page")
 def dashboard_page(request: Request):
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="dashboard.html", context={})
 
 
 @router.get("/mfa", response_class=HTMLResponse, name="mfa_page")
 def mfa_page(request: Request):
-    return templates.TemplateResponse("mfa.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="mfa.html", context={})
 
 
 @router.get("/forgot-password", response_class=HTMLResponse, name="forgot_password_page")
 def forgot_password_page(request: Request):
-    return templates.TemplateResponse("forgot_password.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="forgot_password.html", context={})
 
 
 @router.get("/error", response_class=HTMLResponse, name="error_page")
 def error_page(request: Request):
-    return templates.TemplateResponse("error.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="error.html", context={})

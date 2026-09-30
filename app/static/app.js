@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  const yearTag = document.getElementById('year');
+  const yearTag = document.getElementById('footer-year');
   if (yearTag) {
     yearTag.textContent = new Date().getFullYear();
   }
