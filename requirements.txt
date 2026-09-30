@@ -8,3 +8,4 @@ pydantic[email]
 python-multipart
 jinja2
 fastapi-mail
+pymysql

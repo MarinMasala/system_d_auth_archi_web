@@ -290,7 +290,6 @@ class User(Base):
 - Ce qu'on ajouterait en prod réelle (Redis, plusieurs workers Uvicorn + Nginx en load balancer, réplication PostgreSQL) sans l'avoir codé
 
 
-
 # SSO DGFiP — Architecture commune du groupe
 
 ## Installation
@@ -331,12 +330,12 @@ sso-dgfip/
     │   └── connection_log.py    (P5 — à compléter)
     ├── auth/
     │   ├── core.py              (P2 — fait : hash, JWT, refresh, get_current_user)
-    │   ├── routes.py            (P2 — fait : register/login/refresh/logout
-    │   │                          + emplacements marqués pour les routes MFA/reset de P3)
-    │   ├── mail_config.py       (P3 — à compléter)
-    │   ├── otp_service.py       (P3 — à compléter)
-    │   └── verification_service.py (P3 — à compléter)
-    ├── routers/
+    │   ├── routes.py            (P2/P3 — fait : register/login/refresh/logout
+    │   │                          + MFA par OTP email + activation de compte par email)
+    │   ├── mail_config.py       (P3 — fait)
+    │   ├── otp_service.py       (P3 — fait)
+    │   └── verification_service.py (P3 — fait)
+    ├── routes/
     │   └── pages_routes.py      (P4 — à compléter, sert les templates Jinja2)
     ├── templates/                (P4)
     └── static/                   (P4)
@@ -354,14 +353,13 @@ Le flux register → login → route protégée (`/users/me` via `get_current_us
   en bas du fichier. Pour un helper RBAC minimal en attendant le vôtre, il y a
   déjà `require_role()` dans `app/auth/core.py`.
 - **P4** : les routes `/register` et `/login` sont prêtes, à brancher sur vos
-  formulaires Jinja2 dans `app/routers/pages_routes.py`.
+  formulaires Jinja2 dans `app/routes/pages_routes.py`.
 - **P5** : deux `# TODO P5` sont marqués dans `login()` (`app/auth/routes.py`)
   pour brancher `connection_logs` (succès et échec de connexion).
 
-## À trancher en groupe
+## Décision d'équipe : monitoring
 
-Le `docker-compose.yml` / architecture microservices (auth-service séparé,
-prometheus...) vu dans une des propositions n'est pas dans le scope MVP du
-projet (le document de cours dit explicitement que Docker/Redis restent du
-"discours de rapport" à 5 sans base de code). À voir ensemble si vous voulez
-vraiment partir là-dessus ou rester sur une seule app FastAPI comme ici.
+Prometheus/Grafana/node-exporter (proposés dans `docker-compose.yml`) sont
+retirés : hors scope MVP (le document de cours les classe explicitement en
+"discours de rapport" à 5 sans base de code). On garde `frontend` + `auth-service`
++ `db` dans le compose, le reste reste au niveau du rapport/soutenance.

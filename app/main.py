@@ -9,7 +9,7 @@ from app import models  # noqa: F401  -- importe tous les modèles pour create_a
 from app.auth.routes import router as auth_router
 from app.database import Base, engine
 
-# TODO P4 : from app.routers.pages_routes import router as pages_router
+# TODO P4 : from app.routes.pages_routes import router as pages_router
 
 Base.metadata.create_all(bind=engine)
 

@@ -1,6 +1,5 @@
 """
 Schémas Pydantic : ce que l'API accepte en entrée et renvoie en sortie.
-P3 : ajoutez ici vos schémas OTP / reset password (OtpVerify, PasswordSchema, etc.)
 """
 import re
 
