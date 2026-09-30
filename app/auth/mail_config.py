@@ -1,6 +1,7 @@
 """
 Configuration et envoi d'emails (fastapi-mail).
-Utilisé par otp_service.py (MFA) et verification_service.py (activation de compte).
+Utilisé par otp_service.py (MFA), verification_service.py (activation) et
+password_reset_service.py (réinitialisation du mot de passe).
 
 En dev : créer un compte Mailtrap (gratuit, https://mailtrap.io) et renseigner
 ses identifiants "sandbox" dans .env pour ne jamais envoyer de vrais emails :

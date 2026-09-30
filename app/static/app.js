@@ -136,19 +136,68 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Déclaration / mot de passe oublié : pas encore de route backend, mock volontaire ---
-  const mockMessages = {
-    declaration: 'Déclaration enregistrée. Un accusé de réception a été généré.',
-    forgot: 'Demande reçue. Un email de réinitialisation a été envoyé.',
-  };
-  document.querySelectorAll('form[data-form="declaration"], form[data-form="forgot"]').forEach((form) => {
-    form.addEventListener('submit', (event) => {
+  // --- Déclaration : le backend métier sera raccordé séparément ---
+  const declarationForm = document.querySelector('form[data-form="declaration"]');
+  if (declarationForm) {
+    declarationForm.addEventListener('submit', (event) => {
       event.preventDefault();
-      const status = form.querySelector('.form-status');
-      showStatus(status, mockMessages[form.dataset.form] || 'Formulaire soumis avec succès.', false);
-      form.reset();
+      showStatus(
+        declarationForm.querySelector('.form-status'),
+        'Déclaration enregistrée. Un accusé de réception a été généré.',
+        false,
+      );
+      declarationForm.reset();
     });
-  });
+  }
+
+  // --- Demande d'email de réinitialisation ---
+  const forgotForm = document.querySelector('form[data-form="forgot"]');
+  if (forgotForm) {
+    forgotForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const status = forgotForm.querySelector('.form-status');
+      try {
+        const { ok, data } = await postJSON('/forgot-password', {
+          email: forgotForm.reset_email.value.trim(),
+        });
+        if (ok) {
+          showStatus(status, data?.detail || 'Si un compte correspond à cette adresse, un email lui a été envoyé.', false);
+          forgotForm.reset();
+          return;
+        }
+        showStatus(status, extractErrorMessage(data, 'Impossible de traiter la demande.'), true);
+      } catch (err) {
+        showStatus(status, 'Service momentanément indisponible. Réessayez plus tard.', true);
+      }
+    });
+  }
+
+  // --- Confirmation du nouveau mot de passe ---
+  const resetForm = document.querySelector('form[data-form="reset-password"]');
+  if (resetForm) {
+    resetForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const status = resetForm.querySelector('.form-status');
+      const password = resetForm.new_password.value;
+      if (password !== resetForm.confirm_new_password.value) {
+        showStatus(status, 'Les mots de passe ne correspondent pas.', true);
+        return;
+      }
+
+      try {
+        const token = resetForm.dataset.token;
+        const { ok, data } = await postJSON(`/reset-password/${encodeURIComponent(token)}`, { password });
+        if (ok) {
+          showStatus(status, data?.detail || 'Mot de passe modifié. Vous pouvez maintenant vous connecter.', false);
+          resetForm.reset();
+          return;
+        }
+        showStatus(status, extractErrorMessage(data, 'Impossible de modifier le mot de passe.'), true);
+      } catch (err) {
+        showStatus(status, 'Service momentanément indisponible. Réessayez plus tard.', true);
+      }
+    });
+  }
 
   // --- Déconnexion ---
   const logoutButton = document.querySelector('[data-action="logout"]');
