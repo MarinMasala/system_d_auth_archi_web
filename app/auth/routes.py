@@ -9,6 +9,9 @@ from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
 from app.models.connection_log import log_connection_attempt
 from sqlalchemy.orm import Session
 
+from app.models.declaration import create_declaration
+from app.schemas import DeclarationCreate, DeclarationOut
+
 from app.auth.core import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     REFRESH_TOKEN_EXPIRE_DAYS,
@@ -186,6 +189,23 @@ def logout(
 def read_current_user(current_user: User = Depends(get_current_user)):
     """Exemple de route protégée : démontre que get_current_user fonctionne."""
     return current_user
+
+@router.post("/declaration", response_model=DeclarationOut)
+def submit_declaration(
+    payload: DeclarationCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    declaration = create_declaration(
+        db,
+        user_id=current_user.id,
+        fiscal_id=payload.fiscal_id,
+        year=payload.year,
+        income_type=payload.income_type,
+        amount=payload.amount,
+        comments=payload.comments,
+    )
+    return declaration
 
 
 @router.post("/forgot-password")

@@ -7,6 +7,11 @@ from fastapi.templating import Jinja2Templates
 from app.auth.core import get_optional_user
 from app.models.user import User
 
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models.declaration import Declaration
+
 router = APIRouter(tags=["pages"])
 templates = Jinja2Templates(directory=str(Path(__file__).resolve().parents[1] / "templates"))
 
@@ -73,3 +78,22 @@ def reset_password_page(
 @router.get("/error", response_class=HTMLResponse, name="error_page")
 def error_page(request: Request, user: User | None = Depends(get_optional_user)):
     return templates.TemplateResponse(request=request, name="error.html", context={"user": user})
+
+@router.get("/historique", response_class=HTMLResponse, name="historique_page")
+def historique_page(
+    request: Request,
+    user: User | None = Depends(get_optional_user),
+    db: Session = Depends(get_db),
+):
+    if not user:
+        return RedirectResponse(url="/login")
+
+    declarations = (
+        db.query(Declaration)
+        .filter(Declaration.user_id == user.id)
+        .order_by(Declaration.created_at.desc())
+        .all()
+    )
+    return templates.TemplateResponse(
+        request=request, name="historique.html", context={"user": user, "declarations": declarations}
+    )

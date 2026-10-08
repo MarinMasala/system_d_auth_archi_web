@@ -73,3 +73,23 @@ class MfaRequired(BaseModel):
 class OtpVerify(BaseModel):
     mfa_token: str
     code: str
+
+class DeclarationCreate(BaseModel):
+    fiscal_id: str
+    year: str
+    income_type: str
+    amount: float
+    comments: str | None = None
+
+
+class DeclarationOut(BaseModel):
+    id: int
+    fiscal_id: str
+    year: str
+    income_type: str
+    amount: float
+    comments: str | None
+    created_at: str
+
+    class Config:
+        from_attributes = True

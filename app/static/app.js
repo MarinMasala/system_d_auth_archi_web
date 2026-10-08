@@ -136,21 +136,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Déclaration : le backend métier sera raccordé séparément ---
+  // --- Déclaration : POST /declaration ---
   const declarationForm = document.querySelector('form[data-form="declaration"]');
   if (declarationForm) {
-    declarationForm.addEventListener('submit', (event) => {
+    declarationForm.addEventListener('submit', async (event) => {
       event.preventDefault();
-      showStatus(
-        declarationForm.querySelector('.form-status'),
-        'Déclaration enregistrée. Un accusé de réception a été généré.',
-        false,
-      );
-      declarationForm.reset();
+      const status = declarationForm.querySelector('.form-status');
+
+      const { ok, data } = await postJSON('/declaration', {
+        fiscal_id: declarationForm.fiscal_id.value.trim(),
+        year: declarationForm.year.value,
+        income_type: declarationForm.income_type.value,
+        amount: parseFloat(declarationForm.amount.value),
+        comments: declarationForm.comments.value.trim() || null,
+      });
+
+      if (ok) {
+        showStatus(status, 'Déclaration enregistrée. Un accusé de réception a été généré.', false);
+        declarationForm.reset();
+        return;
+      }
+      showStatus(status, extractErrorMessage(data, 'Impossible d\'enregistrer la déclaration.'), true);
     });
   }
 
-  // --- Demande d'email de réinitialisation ---
+  // --- Demande d'email de réinitialisation : POST /forgot-password ---
   const forgotForm = document.querySelector('form[data-form="forgot"]');
   if (forgotForm) {
     forgotForm.addEventListener('submit', async (event) => {
@@ -172,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Confirmation du nouveau mot de passe ---
+  // --- Confirmation du nouveau mot de passe : POST /reset-password/{token} ---
   const resetForm = document.querySelector('form[data-form="reset-password"]');
   if (resetForm) {
     resetForm.addEventListener('submit', async (event) => {
