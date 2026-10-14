@@ -368,6 +368,43 @@ uvicorn app.main:app --reload
 
 Puis http://127.0.0.1:8000/docs pour tester `/register` et `/login`.
 
+## Lancer avec Docker Compose
+
+L'interface d'authentification actuellement utilisée est servie par FastAPI
+(templates Jinja2) ; elle est donc incluse dans l'image `auth-service`.
+Le dossier `frontend/` contient encore le projet React/Vite de démarrage et
+n'est pas connecté aux routes d'authentification.
+
+1. Installer Docker Desktop, puis créer le fichier local de configuration :
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+2. Dans `.env`, remplacer `SECRET_KEY`, `DB_PASSWORD` et `DB_ROOT_PASSWORD`
+   par des valeurs locales fortes. Les identifiants de base de données doivent
+   être conservés pour que les données persistent entre les redémarrages.
+3. Construire les images et démarrer l'application :
+   ```powershell
+   docker compose up --build -d
+   docker compose ps
+   ```
+4. Ouvrir http://localhost:8000 pour le site ou http://localhost:8000/docs pour
+   l'API. Les logs sont consultables avec `docker compose logs -f auth-service`.
+5. Arrêter les conteneurs sans supprimer les données avec
+   `docker compose down`. Pour supprimer aussi la base persistée, utiliser
+   `docker compose down --volumes` (cette opération efface les données).
+
+Le service MySQL n'est pas publié sur un port de l'hôte ; seul l'API est exposée
+sur le port 8000. Les identifiants et la clé JWT sont injectés depuis `.env`,
+qui n'est pas inclus dans l'image Docker.
+
+Pour passer ensuite à Kubernetes, construisez l'image `auth-service` et
+publiez-la dans un registre accessible au cluster. Créez ensuite des ressources
+Deployment et Service pour l'API, un Secret pour les mots de passe et la clé
+JWT, et un stockage persistant pour MySQL. Pour un environnement durable, une
+base managée est généralement préférable à MySQL hébergé dans un pod. L'image
+Docker de l'API pourra être réutilisée telle quelle dans le Deployment ; le
+Compose sert ici au développement et à la validation locale.
+
 ## Arborescence
 
 ```
