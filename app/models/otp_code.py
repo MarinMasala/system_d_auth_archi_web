@@ -14,7 +14,7 @@ class OtpCode(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
-    code_hash = Column(String, nullable=False)
+    code_hash = Column(String(64), nullable=False)
     expires_at = Column(DateTime, nullable=False)
     used = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
