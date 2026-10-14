@@ -16,9 +16,9 @@ class Declaration(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    fiscal_id = Column(String, nullable=False)
-    year = Column(String, nullable=False)
-    income_type = Column(String, nullable=False)
+    fiscal_id = Column(String(32), nullable=False)
+    year = Column(String(20), nullable=False)
+    income_type = Column(String(100), nullable=False)
     amount = Column(Float, nullable=False)
     comments = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)

@@ -14,14 +14,14 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True, nullable=False)
-    password_hash = Column(String, nullable=False)
-    first_name = Column(String, nullable=True)
-    last_name = Column(String, nullable=True)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    password_hash = Column(String(255), nullable=False)
+    first_name = Column(String(100), nullable=True)
+    last_name = Column(String(100), nullable=True)
     # Conservé pour compatibilité avec le JWT et le code existant.
     # La source d'autorisation RBAC est désormais user.roles.
-    role = Column(String, default="contribuable", nullable=False)
-    status = Column(String, default="active")
+    role = Column(String(50), default="contribuable", nullable=False)
+    status = Column(String(50), default="active")
     is_verified = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 

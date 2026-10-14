@@ -368,6 +368,43 @@ uvicorn app.main:app --reload
 
 Puis http://127.0.0.1:8000/docs pour tester `/register` et `/login`.
 
+## Lancer avec Docker Compose
+
+L'interface d'authentification actuellement utilisée est servie par FastAPI
+(templates Jinja2) ; elle est donc incluse dans l'image `auth-service`.
+Le dossier `frontend/` contient encore le projet React/Vite de démarrage et
+n'est pas connecté aux routes d'authentification.
+
+1. Installer Docker Desktop, puis créer le fichier local de configuration :
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+2. Dans `.env`, remplacer `SECRET_KEY`, `DB_PASSWORD` et `DB_ROOT_PASSWORD`
+   par des valeurs locales fortes. Les identifiants de base de données doivent
+   être conservés pour que les données persistent entre les redémarrages.
+3. Construire les images et démarrer l'application :
+   ```powershell
+   docker compose up --build -d
+   docker compose ps
+   ```
+4. Ouvrir http://localhost:8000 pour le site ou http://localhost:8000/docs pour
+   l'API. Les logs sont consultables avec `docker compose logs -f auth-service`.
+5. Arrêter les conteneurs sans supprimer les données avec
+   `docker compose down`. Pour supprimer aussi la base persistée, utiliser
+   `docker compose down --volumes` (cette opération efface les données).
+
+Le service MySQL n'est pas publié sur un port de l'hôte ; seul l'API est exposée
+sur le port 8000. Les identifiants et la clé JWT sont injectés depuis `.env`,
+qui n'est pas inclus dans l'image Docker.
+
+Pour passer ensuite à Kubernetes, construisez l'image `auth-service` et
+publiez-la dans un registre accessible au cluster. Créez ensuite des ressources
+Deployment et Service pour l'API, un Secret pour les mots de passe et la clé
+JWT, et un stockage persistant pour MySQL. Pour un environnement durable, une
+base managée est généralement préférable à MySQL hébergé dans un pod. L'image
+Docker de l'API pourra être réutilisée telle quelle dans le Deployment ; le
+Compose sert ici au développement et à la validation locale.
+
 ## Arborescence
 
 ```
@@ -420,3 +457,58 @@ Prometheus/Grafana/node-exporter (proposés dans `docker-compose.yml`) sont
 retirés : hors scope MVP (le document de cours les classe explicitement en
 "discours de rapport" à 5 sans base de code). On garde `frontend` + `auth-service`
 + `db` dans le compose, le reste reste au niveau du rapport/soutenance.
+
+## Relancer les conteneurs après un redémarrage du PC
+
+Les données MySQL sont conservées dans le volume Docker `db-data` : redémarrer
+le PC ou arrêter les conteneurs avec `docker compose down` ne les supprime pas.
+Le fichier local `.env` contient la configuration et les secrets nécessaires ;
+ne le supprimez pas et ne le partagez pas.
+
+1. Démarrez Docker Desktop et attendez que Docker indique que son moteur est prêt.
+2. Ouvrez un terminal (PowerShell ou Git Bash) dans le dossier du projet :
+   ```bash
+   cd ~/Documents/system_d_auth_archi_web
+   ```
+   Dans PowerShell, si le dossier courant n'est pas déjà le projet :
+   ```powershell
+   Set-Location "$HOME\Documents\system_d_auth_archi_web"
+   ```
+3. Vérifiez que Docker répond et que le fichier de configuration local est là :
+   ```bash
+   docker info
+   ```
+   Vérifiez également que `.env` existe à la racine. S'il manque, recréez-le
+   depuis `.env.example` et renseignez les secrets avant de démarrer.
+4. Démarrez les services en arrière-plan :
+   ```bash
+   docker compose up -d
+   ```
+   Si le code ou le `Dockerfile` a changé depuis la dernière construction,
+   reconstruisez l'image de l'API avec :
+   ```bash
+   docker compose up --build -d
+   ```
+5. Vérifiez leur état :
+   ```bash
+   docker compose ps
+   ```
+   `auth-service` et `db` doivent être indiqués `healthy`. Ouvrez ensuite
+   [http://localhost:8000](http://localhost:8000) pour le site et
+   [http://localhost:8000/docs](http://localhost:8000/docs) pour l'API.
+
+Si un service n'est pas sain ou si le site ne répond pas, consultez ses logs :
+```bash
+docker compose logs --tail 100 auth-service
+docker compose logs --tail 100 db
+```
+Pour suivre les logs en direct, utilisez `docker compose logs -f`.
+
+Quand vous avez fini, vous pouvez laisser Docker Desktop ouvert ou arrêter les
+conteneurs sans effacer les données :
+```bash
+docker compose down
+```
+Au prochain démarrage, reprenez à l'étape 1 puis relancez `docker compose up -d`.
+N'utilisez pas `docker compose down --volumes` sauf si vous voulez effacer
+définitivement les données MySQL enregistrées.

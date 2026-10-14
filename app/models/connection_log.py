@@ -17,10 +17,10 @@ class ConnectionLog(Base):
     id = Column(Integer, primary_key=True, index=True)
     # nullable : si l'email n'existe pas en base, on n'a pas de user_id à rattacher
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
-    email = Column(String, nullable=False)
-    ip_address = Column(String, nullable=True)
-    user_agent = Column(String, nullable=True)
-    status = Column(String, nullable=False)  # "success" ou "failed"
+    email = Column(String(255), nullable=False)
+    ip_address = Column(String(45), nullable=True)
+    user_agent = Column(String(512), nullable=True)
+    status = Column(String(20), nullable=False)  # "success" ou "failed"
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
 
