@@ -420,6 +420,50 @@ button:hover {
   box-shadow: var(--shadow);
 }
 
+.auth-layout {
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+  padding: 48px 0;
+}
+
+.success-card {
+  width: min(540px, 100%);
+  padding: 42px 32px;
+  text-align: center;
+}
+
+.success-badge {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(46, 125, 50, 0.12);
+  color: var(--success);
+  font-size: 2.2rem;
+  font-weight: 800;
+}
+
+.success-card h1 {
+  margin: 0 0 10px;
+  color: var(--primary-dark);
+  font-size: clamp(2rem, 4vw, 2.6rem);
+}
+
+.success-message {
+  margin: 0 0 24px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-size: 1.05rem;
+}
+
+.justify-center {
+  justify-content: center;
+}
+}
+
 .service-tile h3 {
   margin: 12px 0 8px;
 }

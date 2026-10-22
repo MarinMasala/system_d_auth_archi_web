@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Compte activé | DGFiP{% endblock %}
+
+{% block content %}
+<section class="auth-layout">
+  <div class="form-card success-card">
+    <div class="success-badge">✓</div>
+    <h1>Compte activé</h1>
+    <p class="success-message">{{ message }}</p>
+
+    <div class="cta-row justify-center">
+      <a class="btn btn-primary" href="/login">Se connecter</a>
+      <a class="btn btn-secondary" href="/home">Retour à l'accueil</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

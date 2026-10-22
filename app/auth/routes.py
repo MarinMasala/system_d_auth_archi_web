@@ -5,7 +5,11 @@ Partie P3 : MFA (/mfa/verify-otp) et activation de compte (/verify-email/{token}
 en s'appuyant sur otp_service.py et verification_service.py.
 Réinitialisation de mot de passe par lien email à usage unique.
 """
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
+from pathlib import Path
+
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.auth.core import (
@@ -38,6 +42,7 @@ from app.schemas import (
 )
 
 router = APIRouter(tags=["auth"])
+templates = Jinja2Templates(directory=str(Path(__file__).resolve().parents[1] / "templates"))
 
 
 @router.post("/register", response_model=UserOut)
@@ -60,10 +65,14 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 
-@router.get("/verify-email/{token}")
-def verify_email(token: str, db: Session = Depends(get_db)):
+@router.get("/verify-email/{token}", response_class=HTMLResponse)
+def verify_email(request: Request, token: str, db: Session = Depends(get_db)):
     verify_email_token(token, db)
-    return {"detail": "Compte activé, vous pouvez vous connecter."}
+    return templates.TemplateResponse(
+        request=request,
+        name="email_verified.html",
+        context={"message": "Compte activé, vous pouvez vous connecter."},
+    )
 
 
 def _issue_session_cookies(response: Response, user: User, db: Session) -> TokenResponse:
