@@ -32,11 +32,6 @@ def _generate_code() -> str:
 
 
 async def create_and_send_otp(user: User, db: Session) -> None:
-    # un seul OTP valide à la fois : on invalide ceux encore actifs
-    db.query(OtpCode).filter(
-        OtpCode.user_id == user.id, OtpCode.used.is_(False)
-    ).update({"used": True})
-
     code = _generate_code()
     otp = OtpCode(
         user_id=user.id,
@@ -44,8 +39,6 @@ async def create_and_send_otp(user: User, db: Session) -> None:
         expires_at=datetime.now(timezone.utc) + timedelta(minutes=OTP_EXPIRE_MINUTES),
         used=False,
     )
-    db.add(otp)
-    db.commit()
 
     try:
         await send_email(
@@ -64,6 +57,13 @@ async def create_and_send_otp(user: User, db: Session) -> None:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Envoi du code de vérification impossible pour le moment, réessayez plus tard",
         )
+
+    # Keep the previous code valid unless the replacement was actually sent.
+    db.query(OtpCode).filter(
+        OtpCode.user_id == user.id, OtpCode.used.is_(False)
+    ).update({"used": True})
+    db.add(otp)
+    db.commit()
 
 
 def verify_otp(user_id: int, code: str, db: Session) -> None:
